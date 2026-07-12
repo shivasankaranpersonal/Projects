@@ -169,6 +169,52 @@ with column_right:
 
 st.markdown("")
 st.markdown("")
+
+st.subheader("🏆 Top 10 Best Performing Couriers")
+best_query="""
+SELECT
+    c.courier_id, c.name,
+    COUNT(s.shipment_id) AS total_shipments,
+    SUM(CASE
+            WHEN s.status='Delivered'
+            THEN 1
+            ELSE 0
+        END) AS delivered,
+    ROUND(
+        SUM(CASE
+                WHEN s.status='Delivered'
+                THEN 1
+                ELSE 0
+            END) * 100.0 /
+        COUNT(s.shipment_id),2
+    ) AS delivery_rate,AVG(c.rating) AS avg_rating
+FROM courier_staff c
+LEFT JOIN shipments s
+ON c.courier_id=s.courier_id
+GROUP BY c.courier_id,c.name
+HAVING COUNT(s.shipment_id)>0
+ORDER BY
+delivery_rate DESC,
+avg_rating DESC,
+total_shipments DESC
+LIMIT 10;
+"""
+best_df=getData_sql(best_query,['courier_id','name','total_shipments','delivered','delivery_rate','avg_rating'])
+if not best_df.empty:
+    fig = px.bar(best_df,x="name",y="delivery_rate",color='avg_rating',text="delivery_rate",
+                 hover_data=["total_shipments","delivered","avg_rating"],
+                 title="Top 10 Best Performing Couriers",labels=
+                 {"name":"Courier","delivery_rate":"Delivery Success Rate (%)",
+                  "avg_rating":"Average Rating"}
+            )
+    fig.update_traces(texttemplate="%{text:.1f}%", textposition="outside")
+    st.plotly_chart(fig, use_container_width=True)
+else:
+    st.warning("No Data found for Best performing Couriers!")   
+    
+st.markdown("")
+st.markdown("")
+
 st.subheader("💰 Cost Transparency")
 kpi_query = """
 SELECT
