@@ -9,17 +9,17 @@ def getData_sql(query,column_list, params=None):
     cursor=None
     connection=None
     cursor,connection=connect_db()
-    
+
     if connection:
         try:
             cursor=connection.cursor()
-            
             cursor.execute(query,params=params)
             result=cursor.fetchall()
             
             df=pd.DataFrame(result,columns=column_list)
             
             return df
+
             
         except Exception as ex:
             raise Exception(ex)
